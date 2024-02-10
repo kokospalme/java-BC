@@ -9,7 +9,7 @@ Libraries that are used in this project:
 
 # Hardware
 In the future there will be a small pcb which can be stacked onto the pi, but for now I'm using:
-<a href=""><img align="right" alt="GUI" src="https://github.com/kokospalme/java-BC/blob/main/doc/OLED1.jpg" width="500"></a>
+<a href=""><img align="right" alt="GUI" src="doc/OLED1.jpg" width="500"></a>
 * raspberry pi 3B+
 * OLED Display SSD1306
 * a couple of tactile switches + 10kΩ-pullup resistors
