@@ -7,6 +7,8 @@ import org.deepsymmetry.bcj.SyncMode;
 import org.deepsymmetry.beatlink.DeviceAnnouncement;
 import org.deepsymmetry.beatlink.DeviceAnnouncementListener;
 import org.deepsymmetry.beatlink.DeviceFinder;
+import org.deepsymmetry.beatlink.DeviceUpdate;
+import org.deepsymmetry.beatlink.DeviceUpdateListener;
 import org.deepsymmetry.beatlink.VirtualCdj;
 import org.deepsymmetry.beatlink.data.CrateDigger;
 import org.deepsymmetry.beatlink.data.MetadataFinder;
@@ -19,6 +21,14 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+
+//gui stuff
+import com.diozero.devices.Button;
+import com.obcgui.OBCdisplay;
+import com.obcgui.OBCgui;
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  * The main class of the application. When the jar file is executed using {@code java -jar}, the
  * {@link #main(String[])} method will be called with any command-line arguments supplied.
@@ -26,6 +36,24 @@ import java.net.URISyntaxException;
 public class Main {
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
+
+    //gui stuff
+    private static String devicename = "java-beat-control";
+    private static Timer timer;
+    static int showIntervall_ms = 25;
+    private static int virtualCdjDevicenumber = -1;
+    private static boolean vcdjOnline = false;
+    private static long masterTimer_ms = 0;
+    private static long masterDelay_ms = 500;
+    static Button buttonMaster;
+    static Button buttonLatUp;
+    static Button buttonLatDown;
+    static Button buttonExit;
+    static final int BTN_MA = 4;
+    static final int BTN_LUP = 22;
+    static final int BTN_LDDOWN = 27;
+    static final int BTN_EXIT = 23;
+    static boolean virtualCdjStarted = false;
 
     /**
      * Called when the Virtual CDJ has started successfully, to start up the full complement of
@@ -39,6 +67,7 @@ public class Main {
         CrateDigger.getInstance().start();  // TODO: Add CLI option to control this, to save memory
         SignatureFinder.getInstance().start();
         TimeFinder.getInstance().start();
+        virtualCdjStarted = true;
     }
 
     /**
@@ -47,8 +76,13 @@ public class Main {
      *
      * @param abletonMaster indicates whether the Ableton Link session is supposed to be the tempo master
      */
-    private static void establishBridgeMode(boolean abletonMaster) {
+    private static boolean establishBridgeMode(boolean abletonMaster) {
+        
+        boolean sucess = false;
+        if(System.currentTimeMillis() < masterTimer_ms + masterDelay_ms) return false;
+
         if (abletonMaster && VirtualCdj.getInstance().isSendingStatus()) {  // Have Pro DJ Link follow Ableton Link
+            System.out.print("Ableton becoming Master...");
             try {
                 VirtualCdj.getInstance().becomeTempoMaster();
                 final Double currentLinkTempo = Carabiner.getInstance().getState().linkTempo;
@@ -56,17 +90,29 @@ public class Main {
                     VirtualCdj.getInstance().setTempo(currentLinkTempo);
                 }
                 Carabiner.getInstance().setSyncMode(SyncMode.FULL);
+                sucess = true;
+                masterTimer_ms = System.currentTimeMillis();
+                System.out.println(" OK.");
             } catch (IOException e) {
-                logger.error("Problem telling Virtual CDJ to become tempo master to bridge timelines:", e);
+                // logger.error("Problem telling Virtual CDJ to become tempo master to bridge timelines:", e);
+                sucess = false;
+                System.out.println(" Fail.");
             }
         } else {  // Have Ableton Link follow Pro DJ Link
+            System.out.print("Pioneer becoming Master...");
             VirtualCdj.getInstance().setSynced(true);
             try {
                 Carabiner.getInstance().setSyncMode(SyncMode.PASSIVE);
+                sucess = true;
+                // masterTimer_ms = System.currentTimeMillis();
+                System.out.println(" OK.");
             } catch (IOException e) {
-                logger.error("Problem telling Carabiner to become tempo master to bridge timelines:", e);
+                // logger.error("Problem telling Carabiner to become tempo master to bridge timelines:", e);
+                sucess = false;
+                System.out.println(" Fail.");
             }
         }
+        return sucess;
     }
 
     /**
@@ -193,6 +239,107 @@ public class Main {
         }
     }
 
+    //gui stuff
+    public static void initButtons() {
+        buttonMaster  = new Button(BTN_MA);
+        buttonLatUp  = new Button(BTN_LUP);
+        buttonLatDown  = new Button(BTN_LDDOWN);
+        buttonExit = new Button(BTN_EXIT);
+    }
+
+    public static void initGuiTimer(){
+        System.out.println("Set displaytimer...");
+        timer = new Timer();    //initialize timer
+        timer.scheduleAtFixedRate(new TimerTask() { //set timer
+            @Override
+            public void run() {
+
+                //get latency
+                OBCdisplay.setLatency(Carabiner.getInstance().getLatency());
+
+                
+                //get bar
+                if(virtualCdjStarted){
+                    if(VirtualCdj.getInstance().getTempoMaster() != null){
+                        DeviceUpdate _update = VirtualCdj.getInstance().getTempoMaster();
+                        if(_update.isTempoMaster()){    // real CDJs are Master --> carabiner is passive
+                            VirtualCdj.getInstance().setSynced(true);
+                            try {
+                                Carabiner.getInstance().setSyncMode(SyncMode.PASSIVE);
+                            } catch (IOException e) {
+                                logger.error("Problem telling Carabiner to become tempo master to bridge timelines:", e);
+                            }
+                        }
+
+                        if(TimeFinder.getInstance().getLatestPositionFor(_update) != null){
+                            int _beat = TimeFinder.getInstance().getLatestPositionFor(_update).getBeatWithinBar();  //get beat within bar
+                            OBCdisplay.setBeat(_beat);
+                            // System.out.println(_beat);
+                        }else{
+                            // System.out.println("Timefinder returns null");
+                        }
+                    }else{
+                        // System.out.println("VCDJ Tempomaster returns null");
+                    }
+                }
+
+                //get tempo and set Display
+                if(virtualCdjStarted && VirtualCdj.getInstance().getTempoMaster() != null){ //get tempo from cdj
+                    OBCdisplay.setTempo(VirtualCdj.getInstance().getTempoMaster().getEffectiveTempo());
+                }else{  //else try to get tempo from ableton
+                    if(Carabiner.getInstance() != null){
+                        if(Carabiner.getInstance().getState() != null){
+                            // OBCdisplay.setTempo(Carabiner.getInstance().getState().linkTempo);
+                        }
+                        
+                    }else{
+                        OBCdisplay.setTempo(0);
+                    }
+                }
+                
+
+                //read buttons
+                if(!buttonMaster.isPressed()){  //!!! bug: Ableton becomes Master when pressing twice on the button
+                    if(virtualCdjStarted){
+                        System.out.print("try to become master...");
+                        // if(VirtualCdj.getInstance().isSendingStatus()){
+                        //     becomeMaster();
+                        // }
+                        if(establishBridgeMode(true)){
+                            OBCdisplay.setPlayerMaster(virtualCdjDevicenumber, true);
+                        }
+                        
+                        while(!buttonMaster.isPressed()){}    //wait for button to get released
+                    }
+
+                }
+
+                if(!buttonLatUp.isPressed()){
+                    Carabiner.getInstance().setLatency(Carabiner.getInstance().getLatency() +1);
+
+                    while(!buttonLatUp.isPressed()){
+                        // System.out.println( "upPressed.." );
+                        if(!buttonMaster.isPressed()){
+                            System.out.println( "exit application!" );
+                            System.exit(0);
+                        }
+                    }    //wait for button to get released
+                }
+                if(!buttonLatDown.isPressed()){
+                    Carabiner.getInstance().setLatency(Carabiner.getInstance().getLatency() -1);
+    
+                    while(!buttonLatDown.isPressed()){}    //wait for button to get released
+                }
+
+                if(!buttonExit.isPressed()){
+                    System.exit(0);
+                }
+
+            }
+        }, 0, showIntervall_ms); //no delay, then call method every x ms
+
+    }
+
     /**
      * Invoked when the executable jar is run using {@code java -jar}, along with any command-line arguments that
      * were present. Sets up the proper configuration as modified by those arguments, and starts looking for
@@ -201,6 +348,45 @@ public class Main {
      * @param args the command-line arguments, if any, with which the program was run
      */
     public static void main(String[] args) {
+        //gui stuff
+        OBCgui.init();
+        initButtons();
+        initGuiTimer();
+
+
+        //add update listener for CDJs
+        VirtualCdj.getInstance().addUpdateListener(new DeviceUpdateListener() {
+            @Override
+            public void received(DeviceUpdate update) {
+                boolean _isVirtualcdj = false;
+                if(update.getDeviceName() == devicename) _isVirtualcdj = true;
+                    
+                // System.out.println("update from:" + update.getDeviceName());
+                OBCdisplay.setPlayerOnline(update.getDeviceNumber(), update.getDeviceName(), _isVirtualcdj);
+                if(_isVirtualcdj) virtualCdjDevicenumber = update.getDeviceNumber();
+
+                OBCdisplay.setBarphase(VirtualCdj.getInstance().getPlaybackPosition().getBarPhase());
+
+                // OBCdisplay.setPlayerMaster(update.getDeviceNumber(), update.isTempoMaster());
+                OBCdisplay.setTempo(update.getEffectiveTempo());
+                
+                if(!_isVirtualcdj && update.isTempoMaster() && update.getDeviceNumber() != virtualCdjDevicenumber){ //if update is from actual CDJ and this one is Master
+                    if(establishBridgeMode(false)){
+                        OBCdisplay.setPlayerMaster(update.getDeviceNumber(), true);
+                    }
+                }
+                if(_isVirtualcdj && update.isTempoMaster() && update.getDeviceNumber() == virtualCdjDevicenumber){  //if update is from virtual cdj
+                    if(establishBridgeMode(true)){
+                        OBCdisplay.setPlayerMaster(update.getDeviceNumber(), true);
+                    }
+                }
+                
+            }
+        });
+
+
+        //gui stuff end
+
         // Start by parsing command-line arguments.
         final Options options = buildCommandLineOptions();
         final CommandLineParser parser = new DefaultParser();
@@ -235,7 +421,7 @@ public class Main {
             }
 
             // Set our device name, then start the daemons that do everything.
-            VirtualCdj.getInstance().setDeviceName("java-beat-control");
+            VirtualCdj.getInstance().setDeviceName(devicename);
             logger.info("Waiting for Pro DJ Link devices...");
             DeviceFinder.getInstance().addDeviceAnnouncementListener(new DeviceAnnouncementListener() {
                 @Override
@@ -250,6 +436,9 @@ public class Main {
                                     if (Util.isRealPlayer()) {  // But no, we can use all the bells and whistles!
                                         VirtualCdj.getInstance().setSendingStatus(true);
                                         MetadataFinder.getInstance().setPassive(false);
+                                        System.out.println("set virtualCDJ: \n" + VirtualCdj.getDeviceName());
+                                        OBCdisplay.setPlayerOnline(VirtualCdj.getInstance().getDeviceNumber(), VirtualCdj.getDeviceName(), true);  //tell virtual player is online
+                                        virtualCdjDevicenumber = VirtualCdj.getInstance().getDeviceNumber();
                                     }
                                     if (cmd.hasOption("bridge")) {
                                         establishBridgeMode(cmd.hasOption("ableton-master"));
@@ -262,6 +451,7 @@ public class Main {
                             logger.error("Problem trying to start Virtual CDJ", t);
                         }
                     }).start();
+                    OBCdisplay.setPlayerOnline(announcement.getDeviceNumber(), announcement.getDeviceName(), false);  //tell display player is online
                 }
 
                 @Override
@@ -269,6 +459,7 @@ public class Main {
                     logger.info("Pro DJ Link Device Lost: {}", announcement);
                     if (DeviceFinder.getInstance().getCurrentDevices().isEmpty()) {
                         logger.info("Shutting down Virtual CDJ");  // We lost the last device, shut down for now.
+                        OBCdisplay.setPlayerOffline(announcement.getDeviceNumber());    //tell display player is now offline
                         VirtualCdj.getInstance().stop();
                     }
                 }
@@ -307,13 +498,26 @@ public class Main {
 
         // Keep the program running until killed.
         //noinspection InfiniteLoopStatement
-        while (true) {
-            try {
-                //noinspection BusyWait
-                Thread.sleep(60000);
-            } catch (InterruptedException e) {
-                logger.info("Strange, interrupted in main sleep loop:", e);
-            }
+
+        boolean systemRunning = true;   //!!! for testing only
+
+        while (systemRunning) {
+
+            OBCdisplay.setBarphase(VirtualCdj.getInstance().getPlaybackPosition().getBarPhase());
+            OBCdisplay.setTempo(VirtualCdj.getInstance().getTempo());
+
+            if(VirtualCdj.getInstance().getTempo() > 200) systemRunning = false; //exit application if bpm > 200
+
         }
+        System.exit(0);
+
+        // while (true) {
+        //     try {
+        //         //noinspection BusyWait
+        //         Thread.sleep(60000);
+        //     } catch (InterruptedException e) {
+        //         logger.info("Strange, interrupted in main sleep loop:", e);
+        //     }
+        // }
     }
 }
