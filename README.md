@@ -42,6 +42,7 @@ Tested gear:
 * scan I2C if there is the display: ```i2cdetect -y 1```
 * install java: ```sudo apt install default-jre```
 * you can check the java-version with: ```java -version ```
+* install pigpio with ```sudo apt-get install pigpio```(see [this page](https://stackoverflow.com/questions/29721389/pi4j-unable-to-load-libpi4j-so-using-path))
 * upload the .jar file to ```/home/pi/``` with cyberduck
 * run the application with: ```sudo java -jar /home/pi/java-BC.jar```
 
