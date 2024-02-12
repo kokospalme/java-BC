@@ -1,7 +1,7 @@
 # java-BC
 * Software (main): [java-BC](https://github.com/kokospalme/java-BC)
 * Software (gui): [obcgui](https://github.com/kokospalme/obcgui/)
-* Hardware (pcb): [KiCad_obcgui](https://github.com/kokospalme/KiCad_obcbox)
+* Hardware (pcb): [KiCad_obcbox](https://github.com/kokospalme/KiCad_obcbox)
 * Hardware (case): [grabcad](https://grabcad.com/library/obcbox-enclosure-v1-0-1)
 
 ## orign
