@@ -15,15 +15,13 @@ Libraries that are used in this project:
 
 # Hardware
 This is the current Hardware-setup. See [KiCad_obcbox](https://github.com/kokospalme/KiCad_obcbox) for more info
-<a href=""><img align="right" alt="hardware" src="https://github.com/kokospalme/KiCad_obcbox/blob/main/doc/PCB_v0.2.png" width="500"></a>
-* raspberry pi 3B+
-* OLED Display SSD1306
-* a couple of tactile switches + 10kΩ-pullup resistors
-* a breadboard
+<a href=""><img align="right" alt="PCB_v0.2" src="https://github.com/kokospalme/obcgui/blob/main/doc/hardware20240212.jpg" width="500"></a>
+
 Tested gear:
-* Pioneer XDJ-1000MK2
-* Akai Force
-* Ableton Live lite 11 (mac)
+* [X] Pioneer XDJ-1000MK2
+* [X] Akai Force
+* [ ] Ableton Push 3 standalone
+* [X] Ableton Live lite 11 (mac)
 
 
 # Software
