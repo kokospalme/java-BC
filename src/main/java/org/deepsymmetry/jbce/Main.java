@@ -26,6 +26,8 @@ import java.net.URISyntaxException;
 import com.diozero.devices.Button;
 import com.obcgui.OBCdisplay;
 import com.obcgui.OBCgui;
+import com.obcgui.OBCledhandler;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -45,14 +47,15 @@ public class Main {
     private static boolean vcdjOnline = false;
     private static long masterTimer_ms = 0;
     private static long masterDelay_ms = 500;
+    static final int latencyMax = 100;
+    static final int latencyMin = -100;
     static Button buttonMaster;
     static Button buttonLatUp;
     static Button buttonLatDown;
     static Button buttonExit;
     static final int BTN_MA = 4;
-    static final int BTN_LUP = 22;
-    static final int BTN_LDDOWN = 27;
-    static final int BTN_EXIT = 23;
+    static final int BTN_LUP = 25;
+    static final int BTN_LDDOWN = 17;
     static boolean virtualCdjStarted = false;
 
     /**
@@ -244,7 +247,6 @@ public class Main {
         buttonMaster  = new Button(BTN_MA);
         buttonLatUp  = new Button(BTN_LUP);
         buttonLatDown  = new Button(BTN_LDDOWN);
-        buttonExit = new Button(BTN_EXIT);
     }
 
     public static void initGuiTimer(){
@@ -273,7 +275,7 @@ public class Main {
 
                         if(TimeFinder.getInstance().getLatestPositionFor(_update) != null){
                             int _beat = TimeFinder.getInstance().getLatestPositionFor(_update).getBeatWithinBar();  //get beat within bar
-                            OBCdisplay.setBeat(_beat);
+                            OBCdisplay.setBarphase((double) _beat); //ToDo: obcgui bug?
                             // System.out.println(_beat);
                         }else{
                             // System.out.println("Timefinder returns null");
@@ -307,26 +309,40 @@ public class Main {
                         // }
                         if(establishBridgeMode(true)){
                             OBCdisplay.setPlayerMaster(virtualCdjDevicenumber, true);
+                            OBCledhandler.setMaster(true);
                         }
-                        
-                        while(!buttonMaster.isPressed()){}    //wait for button to get released
                     }
+                    while(!buttonMaster.isPressed()){
+                        if(!buttonLatDown.isPressed() && !buttonLatUp.isPressed()){
+                            System.out.println("shutdown obcbox");
+                            try {
+                                Process p = Runtime.getRuntime().exec("sudo shutdown -h now");
+                                p.waitFor();
+                            } catch (IOException | InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }    //wait for button to get released
 
                 }
 
                 if(!buttonLatUp.isPressed()){
-                    Carabiner.getInstance().setLatency(Carabiner.getInstance().getLatency() +1);
+                    int _latency = Carabiner.getInstance().getLatency();
+                    _latency ++
+                    
+                    ;
+                    _latency = OBCgui.checkLatency(_latency, latencyMin, latencyMax);
+                    Carabiner.getInstance().setLatency(_latency);
 
                     while(!buttonLatUp.isPressed()){
                         // System.out.println( "upPressed.." );
-                        if(!buttonMaster.isPressed()){
-                            System.out.println( "exit application!" );
-                            System.exit(0);
-                        }
                     }    //wait for button to get released
                 }
                 if(!buttonLatDown.isPressed()){
-                    Carabiner.getInstance().setLatency(Carabiner.getInstance().getLatency() -1);
+                    int _latency = Carabiner.getInstance().getLatency();
+                    _latency --;
+                    _latency = OBCgui.checkLatency(_latency, latencyMin, latencyMax);
+                    Carabiner.getInstance().setLatency(_latency);
     
                     while(!buttonLatDown.isPressed()){}    //wait for button to get released
                 }
@@ -349,7 +365,14 @@ public class Main {
      */
     public static void main(String[] args) {
         //gui stuff
+
         OBCgui.init();
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         initButtons();
         initGuiTimer();
 
@@ -373,11 +396,13 @@ public class Main {
                 if(!_isVirtualcdj && update.isTempoMaster() && update.getDeviceNumber() != virtualCdjDevicenumber){ //if update is from actual CDJ and this one is Master
                     if(establishBridgeMode(false)){
                         OBCdisplay.setPlayerMaster(update.getDeviceNumber(), true);
+                        OBCledhandler.setMaster(false);
                     }
                 }
                 if(_isVirtualcdj && update.isTempoMaster() && update.getDeviceNumber() == virtualCdjDevicenumber){  //if update is from virtual cdj
                     if(establishBridgeMode(true)){
                         OBCdisplay.setPlayerMaster(update.getDeviceNumber(), true);
+                        OBCledhandler.setMaster(true);
                     }
                 }
                 
