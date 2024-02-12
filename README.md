@@ -14,8 +14,8 @@ Libraries that are used in this project:
 * https://github.com/Deep-Symmetry/java-beat-control-example
 
 # Hardware
-In the future there will be a small pcb which can be stacked onto the pi, but for now I'm using:
-<a href=""><img align="right" alt="GUI" src="doc/OLED1.jpg" width="500"></a>
+This is the current Hardware-setup. See [KiCad_obcbox](https://github.com/kokospalme/KiCad_obcbox) for more info
+<a href=""><img align="right" alt="hardware" src="https://github.com/kokospalme/KiCad_obcbox/blob/main/doc/PCB_v0.2.png" width="500"></a>
 * raspberry pi 3B+
 * OLED Display SSD1306
 * a couple of tactile switches + 10kΩ-pullup resistors
