@@ -1,4 +1,8 @@
 # java-BC
+* Software: [main-project(obcbox)](https://github.com/kokospalme/java-BC)
+* Software: [obcgui](https://github.com/kokospalme/obcgui/)
+* Hardware: [grabcad](https://grabcad.com/library/obcbox-enclosure-v1-0-1)
+## orign
 [![project chat](https://img.shields.io/badge/chat-on%20zulip-brightgreen)](https://deep-symmetry.zulipchat.com/#narrow/stream/278354-carabiner)
 A java progam to make open-beat-control work on a handy single-board-computer for livegigs etc. This project is based on [Deep-Symmetry's great java-beat-control-example](https://github.com/Deep-Symmetry/java-beat-control-example) and currently in progress. So please be careful when you fork it!
 
@@ -29,7 +33,7 @@ Tested gear:
 * [X] display the current latency between DJ Pro Link and Ableton Link
 * [X] manipulate latency on the fly via buttons
 * [X] manipulate who is the current Master of the session
-* [ ] illuminate an LED when Ableton Link is Master
+* [] illuminate an LED when Ableton Link is Master (bugs when obcgui is used in java-BC)
 
 ## install
 * install raspberry pi OS lite on a SD card with the [Raspberry Pi imager](https://www.raspberrypi.com/software/)
