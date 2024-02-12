@@ -1,7 +1,9 @@
 # java-BC
-* Software: [main-project(obcbox)](https://github.com/kokospalme/java-BC)
-* Software: [obcgui](https://github.com/kokospalme/obcgui/)
-* Hardware: [grabcad](https://grabcad.com/library/obcbox-enclosure-v1-0-1)
+* Software (main): [java-BC](https://github.com/kokospalme/java-BC)
+* Software (gui): [obcgui](https://github.com/kokospalme/obcgui/)
+* Hardware (pcb): [KiCad_obcgui](https://github.com/kokospalme/KiCad_obcbox)
+* Hardware (case): [grabcad](https://grabcad.com/library/obcbox-enclosure-v1-0-1)
+
 ## orign
 [![project chat](https://img.shields.io/badge/chat-on%20zulip-brightgreen)](https://deep-symmetry.zulipchat.com/#narrow/stream/278354-carabiner)
 A java progam to make open-beat-control work on a handy single-board-computer for livegigs etc. This project is based on [Deep-Symmetry's great java-beat-control-example](https://github.com/Deep-Symmetry/java-beat-control-example) and currently in progress. So please be careful when you fork it!
