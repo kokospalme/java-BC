@@ -13,17 +13,6 @@ Libraries that are used in this project:
 * https://github.com/fauxpark/oled-core
 * https://github.com/Deep-Symmetry/java-beat-control-example
 
-# Hardware
-This is the current Hardware-setup. See [KiCad_obcbox](https://github.com/kokospalme/KiCad_obcbox) for more info
-<a href=""><img align="right" alt="PCB_v0.2" src="https://github.com/kokospalme/obcgui/blob/main/doc/hardware20240212.jpg" width="500"></a>
-
-Tested gear:
-* [X] Pioneer XDJ-1000MK2
-* [X] Akai Force
-* [ ] Ableton Push 3 standalone
-* [X] Ableton Live lite 11 (mac)
-
-
 # Software
 ## functionality
 * [x] establish a connection between DJ Pro Link and Ableton Link
@@ -33,7 +22,17 @@ Tested gear:
 * [X] display the current latency between DJ Pro Link and Ableton Link
 * [X] manipulate latency on the fly via buttons
 * [X] manipulate who is the current Master of the session
-* [] illuminate an LED when Ableton Link is Master (bugs when obcgui is used in java-BC)
+* [ ] illuminate an LED when Ableton Link is Master (bugs when obcgui is used in java-BC)
+
+# Hardware
+This is the current Hardware-setup. See [KiCad_obcbox](https://github.com/kokospalme/KiCad_obcbox) for more info
+<a href=""><img align="right" alt="PCB_v0.2" src="https://github.com/kokospalme/obcgui/blob/main/doc/hardware20240212.jpg" width="500"></a>
+
+Tested gear:
+* [X] Pioneer XDJ-1000MK2
+* [X] Akai Force
+* [ ] Ableton Push 3 standalone
+* [X] Ableton Live lite 11 (mac)
 
 ## install
 * install raspberry pi OS lite on a SD card with the [Raspberry Pi imager](https://www.raspberrypi.com/software/)
