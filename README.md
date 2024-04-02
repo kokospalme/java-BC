@@ -49,12 +49,12 @@ Tested gear:
 * upload the .jar file to ```/home/pi/``` with cyberduck
 * run the application with: ```sudo java -jar /home/pi/java-BC.jar```
 
-## Start program with boot
+## Start application with boot
 * access the pi with the terminal(mac): ```ssh pi@ip.address.of.the.pi```
 * type in the password ("raspberry" on raspberry pi OS)
 * cmd:```sudo nano /etc/rc.local```will open a file in which you can write commands that are executed with booting
 * add the line: ```sudo java -jar /home/pi/java-BC.jar -r -B -l=-17``` to the file and save it
-* cmd: ```sudo reboot```will 
+* cmd: ```sudo reboot```will reboot the machine and start the application when booting
 
 
 
